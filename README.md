@@ -1,53 +1,86 @@
-# 🤖 Code-Review-Agent
+# Autonomous Code Review Agent
 
-**Code-Review-Agent** is an intelligent AI-powered assistant designed to automate the process of code review. It helps developers identify bugs, optimize code, and follow best practices — saving time and improving software quality.
+An AI-powered system that automatically analyzes GitHub pull requests for:
+- **Code style** & formatting issues
+- **Potential bugs** & errors
+- **Performance** improvements
+- **Best practices** violations
 
----
-
-## Overview
-
-Manual code reviews can be time-consuming and subjective. **Code-Review-Agent** leverages AI and static analysis techniques to provide:
-
--  Fast feedback on code quality
--  Detection of bugs, security vulnerabilities, and smells
--  Enforcement of style guides and best practices
--  Suggestions for improvements
-
-This makes it ideal for solo developers, teams, and open-source contributors.
-
----
+Built with FastAPI, Celery, Redis, and LangGraph, supporting both OpenAI and Ollama LLMs.
 
 ## Features
 
--  AI-based analysis for intelligent suggestions
--  Static code inspection with customizable rules
--  GitHub integration (planned)
--  Python-first (multi-language support coming soon)
--  Test coverage recommendations
--  CLI or Web-based UI options (depending on implementation)
+- **Async Processing**: Celery + Redis handle background tasks
+- **Multi-LLM Support**: OpenAI or local Ollama models
+- **GitHub Integration**: Fetches PR details, diffs, and changed files
+- **Structured Output**: Consistent JSON results with issue categorization
+- **Extensible**: Easy to add new analysis rules or LLM providers
 
----
+## Tech Stack
 
+- **Backend**: FastAPI (Python)
+- **Task Queue**: Celery + Redis
+- **AI Framework**: LangGraph (for agent workflows)
+- **LLM**: OpenAI or Ollama (local)
+- **Database**: Redis (for task results)
+- **Containerization**: Docker
 
+## Prerequisites
 
-Follow these steps to set up and run the project locally.
+- Python 3.8+
+- Docker (for Redis)
+- [Ollama](https://ollama.ai/download) (if using local LLMs)
+- GitHub Personal Access Token (optional)
+
+## Setup & Installation
 
 ### 1. Clone the Repository
-
 ```bash
-git clone https://github.com/Jitsu-13/Code-Review-Agent.git
-cd app
-# Create
-python -m venv .venv
+git clone https://github.com/Jitsu-13/Code-Review-Agent
+cd code-review-agent
 
-# Activate (Linux/macOS)
-source .venv/bin/activate
+### 2. Set Up Environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 
-# Activate (Windows)
-.venv\Scripts\activate
-
+### 3. Install Dependencies
 pip install -r requirements.txt
 
+### 4. Create .env file:
 
-python src/main.py
-uvicorn src.main:app --reload
+# Required
+GITHUB_TOKEN=your_github_token
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# LLM Configuration (choose one)
+LLM_PROVIDER=ollama  # or "openai"
+LLM_MODEL=codellama  # e.g., "gpt-4" for OpenAI
+
+# Only if using OpenAI
+OPENAI_API_KEY=your_openai_key
+
+Running Locally
+
+Start Redis (in a separate terminal):
+
+bash
+docker run -p 6379:6379 redis
+Start Celery Worker:
+
+bash
+celery -A app.tasks.analyze_pr worker --loglevel=info
+Run FastAPI Server:
+
+bash
+uvicorn app.main:app --reload
+
+The API will be available at http://localhost:8000
+
+API Endpoints 📡
+Endpoint	Method	Description
+/analyze-pr	POST	Submit a PR for analysis
+/status/<task_id>	GET	Check task status
+/results/<task_id>	GET	Get analysis results
+
